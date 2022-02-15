@@ -1,0 +1,59 @@
+---
+title: "Assignment 3 Task 1"
+author: "Ali Martin"
+date: "2/12/2022"
+output: 
+  html_document:
+    theme: yeti
+    code_folding: hide
+---
+
+```{r setup, include=TRUE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(here)
+library(ggfortify)
+library(patchwork)
+library(lubridate)
+library(plotly)
+library(janitor)
+```
+
+## Introduction: 
+
+## Principal Component Analysis
+
+```{r}
+#read in and clean the data
+env_vars <- read_csv("world_env_vars.csv") %>% 
+na.omit()
+
+env_pca <- env_vars %>% #only allowed numeric data for PCA
+  select(temp_annual_range, starts_with("rain")) %>% # wrangle data for annual temp range, and for columns starting with rain
+  scale() %>% 
+  prcomp()
+
+
+```
+
+Do a Screenplot
+
+```{r}
+sd_vec <- env_pca$sdev
+
+var_vec <- sd_vec^2
+
+pc_names <- colnames(env_pca$rotation)
+pct_expl_df <- data.frame(v = var_vec,
+                          pct_v = var_vec / sum(var_vec), #percent variance
+                          pc = fct_inorder(pc_names)) %>% 
+  mutate(pct_lbl = paste0(round(pct_v * 100, 1), '%'))
+
+
+ggplot(pct_expl_df, aes(x = pc, y = v)) +
+  geom_col() +
+  geom_text(aes(label = pct_lbl), vjust = 0, nudge_y = .005) +
+  labs(x = 'Principal component', y = "Variance explained")
+```
+
